@@ -19,3 +19,6 @@
 	dependencies {
 		compile 'com.github.mingzhangyong:gestureSwipeRefreshLayout:1.1'
 	}
+	
+
+剩下的就是用GestureSwipeRefreshLayout代替SwipeRefreshLayout。（记得布局文件中也要修改）
