@@ -174,9 +174,14 @@ public class GestureSwipeRefreshLayout extends ViewGroup implements NestedScroll
     // Whether the client has set a custom starting position;
     private boolean mUsingCustomStart;
 
-    private GestureDetector gestureDetector;
+    private Context mContext;
 
     private boolean bannerHandlerAction;
+
+    //记录上次位置
+    private int mLastXIntercept  = 0;
+    private int mLastYIntercept = 0;
+
 
     private AnimationListener mRefreshListener = new AnimationListener() {
         @Override
@@ -288,6 +293,7 @@ public class GestureSwipeRefreshLayout extends ViewGroup implements NestedScroll
      */
     public GestureSwipeRefreshLayout(Context context) {
         this(context, null);
+
     }
 
     /**
@@ -298,19 +304,7 @@ public class GestureSwipeRefreshLayout extends ViewGroup implements NestedScroll
      */
     public GestureSwipeRefreshLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-        gestureDetector = new GestureDetector(context,new GestureDetector.SimpleOnGestureListener(){
-            @Override
-            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                if(Math.abs(distanceX) > Math.abs(distanceY)){
-                    bannerHandlerAction = true ;
-                }else{
-                    bannerHandlerAction = false ;
-                }
-                return super.onScroll(e1, e2, distanceX, distanceY);
-            }
-        });
-
+        mContext = context;
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 
         mMediumAnimationDuration = getResources().getInteger(
@@ -674,8 +668,8 @@ public class GestureSwipeRefreshLayout extends ViewGroup implements NestedScroll
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        gestureDetector.onTouchEvent(ev);
-
+        int moveX = (int) ev.getX();
+        int moveY = (int) ev.getY();
         ensureTarget();
 
         final int action = MotionEventCompat.getActionMasked(ev);
@@ -700,6 +694,7 @@ public class GestureSwipeRefreshLayout extends ViewGroup implements NestedScroll
                     return false;
                 }
                 mInitialDownY = initialDownY;
+                bannerHandlerAction = true;
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -718,6 +713,11 @@ public class GestureSwipeRefreshLayout extends ViewGroup implements NestedScroll
                     mIsBeingDragged = true;
                     mProgress.setAlpha(STARTING_PROGRESS_ALPHA);
                 }
+                if(Math.abs(moveX - mLastXIntercept)>Math.abs(moveY - mLastYIntercept)){
+                    bannerHandlerAction = true;
+                }else{
+                    bannerHandlerAction = false;
+                }
                 break;
 
             case MotionEventCompat.ACTION_POINTER_UP:
@@ -728,6 +728,7 @@ public class GestureSwipeRefreshLayout extends ViewGroup implements NestedScroll
             case MotionEvent.ACTION_CANCEL:
                 mIsBeingDragged = false;
                 mActivePointerId = INVALID_POINTER;
+                bannerHandlerAction = true;
                 break;
         }
 
